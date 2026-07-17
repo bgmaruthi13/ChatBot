@@ -9,5 +9,12 @@ class LLMProvider(ABC):
 
     @abstractmethod
     def generate(self, question, chunks):
-        """Return an answer string built from `question` and `chunks`."""
+        """Return either:
+        - an answer string (citations shown will be every retrieved
+          chunk - reasonable for a generative provider that may draw on
+          the full context even without quoting it), or
+        - a (answer, used_chunk_ids) tuple, where used_chunk_ids is the
+          subset of `chunks`' chunk_id values actually reflected in the
+          answer, so the UI's citations match exactly what's shown.
+        """
         raise NotImplementedError

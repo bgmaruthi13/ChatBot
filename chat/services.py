@@ -21,10 +21,18 @@ def ask(question, document_id, session):
     ChatMessage.objects.create(session=session, role=ChatMessage.Role.USER, content=question)
 
     chunks = retrieve(question, document_id=document_id)
-    answer = get_provider().generate(question, chunks)
+    result = get_provider().generate(question, chunks)
+
+    if isinstance(result, tuple):
+        answer, used_chunk_ids = result
+        used_ids = set(used_chunk_ids)
+        cited_chunks = [c for c in chunks if c["chunk_id"] in used_ids]
+    else:
+        answer = result
+        cited_chunks = chunks
 
     source_chunks = [
-        {"chunk_id": c["chunk_id"], "page_number": c["page_number"]} for c in chunks
+        {"chunk_id": c["chunk_id"], "page_number": c["page_number"]} for c in cited_chunks
     ]
     return ChatMessage.objects.create(
         session=session,
