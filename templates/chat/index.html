@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Chat · PDF ChatBot{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">Chat</h1>
+  <div class="surface" style="padding: 16px;">
+    {% if documents %}
+      <p>Pick a document to chat with:</p>
+      <ul>
+        {% for document in documents %}
+          <li><a href="{% url 'chat:session' document.pk %}">{{ document.title }}</a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No documents are ready to chat with yet. <a href="{% url 'documents:upload' %}">Upload one</a>.</p>
+    {% endif %}
+  </div>
+{% endblock %}

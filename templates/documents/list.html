@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Documents · PDF ChatBot{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">Documents</h1>
+
+  <div class="toolbar">
+    <a href="{% url 'documents:upload' %}" class="button-primary">+ Upload PDF</a>
+  </div>
+
+  <div class="surface">
+    <table class="resource-list">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Pages</th>
+          <th>Uploaded</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for document in documents %}
+          <tr data-document-row="{{ document.pk }}">
+            <td><a href="{% url 'documents:detail' document.pk %}">{{ document.title }}</a></td>
+            <td>
+              <span class="status-badge status-badge--{{ document.status }}" data-status-badge="{{ document.pk }}" data-status="{{ document.status }}">{{ document.get_status_display }}</span>
+            </td>
+            <td data-pages="{{ document.pk }}">{{ document.page_count|default:"—" }}</td>
+            <td>{{ document.uploaded_at }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if not documents %}
+      <div class="resource-list__empty">No documents uploaded yet.</div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block extra_body %}
+  <script src="{% static 'js/status-poll.js' %}"></script>
+{% endblock %}

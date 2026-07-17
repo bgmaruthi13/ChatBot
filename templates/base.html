@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}PDF ChatBot{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <header class="command-bar">
+    <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <span class="command-bar__brand">PDF ChatBot</span>
+    <span class="command-bar__spacer"></span>
+  </header>
+
+  <div class="app-shell" id="app-shell">
+    <nav class="left-nav">
+      <a href="{% url 'documents:list' %}" class="left-nav__item {% if active_nav == 'documents' %}active{% endif %}">
+        <span class="left-nav__icon">&#128196;</span>
+        <span>Documents</span>
+      </a>
+      <a href="{% url 'chat:index' %}" class="left-nav__item {% if active_nav == 'chat' %}active{% endif %}">
+        <span class="left-nav__icon">&#128172;</span>
+        <span>Chat</span>
+      </a>
+    </nav>
+
+    <main class="content">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="surface" style="padding: 10px 16px; margin-bottom: 16px; border-left: 3px solid var(--color-success);">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script src="{% static 'js/nav-toggle.js' %}"></script>
+  {% block extra_body %}{% endblock %}
+</body>
+</html>

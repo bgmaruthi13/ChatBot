@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ document.title }} · PDF ChatBot{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">Delete document?</h1>
+
+  <div class="surface" style="padding: 16px; max-width: 480px;">
+    <p>This permanently deletes <strong>{{ document.title }}</strong>, its stored file, and any indexed chunks/vectors. This cannot be undone.</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="button-primary" style="background: var(--color-error);">Delete permanently</button>
+      <a href="{% url 'documents:detail' document.pk %}" style="margin-left: 12px;">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

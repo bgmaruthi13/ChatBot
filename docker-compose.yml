@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Bind-mounting the whole project means db.sqlite3, media/, and
+      # chroma_data/ all persist on the host across container rebuilds
+      # (they're already gitignored - see .gitignore).
+      - .:/app
+      - huggingface_cache:/root/.cache/huggingface
+
+volumes:
+  huggingface_cache:

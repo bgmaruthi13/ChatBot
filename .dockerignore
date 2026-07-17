@@ -1,0 +1,10 @@
+venv/
+media/
+chroma_data/
+db.sqlite3
+.env
+.git/
+__pycache__/
+*.pyc
+.vscode/
+.idea/

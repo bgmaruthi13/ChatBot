@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Upload · PDF ChatBot{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">Upload a PDF</h1>
+  <div class="surface" style="padding: 16px; max-width: 480px;">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Upload</button>
+    </form>
+  </div>
+{% endblock %}

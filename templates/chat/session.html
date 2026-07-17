@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Chat: {{ document.title }} · PDF ChatBot{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">Chat</h1>
+
+  <div class="chat-blade">
+    <div class="chat-blade__header">
+      <span>{{ document.title }}</span>
+      <span>
+        <a href="{% url 'documents:detail' document.pk %}" style="font-weight: normal; font-size: 13px; margin-right: 14px;">View document</a>
+        <a href="{% url 'chat:index' %}" class="chat-blade__close" aria-label="Close chat" title="Close">&times;</a>
+      </span>
+    </div>
+
+    <div class="chat-blade__body">
+      {% for message in chat_messages %}
+        <div class="chat-bubble chat-bubble--{{ message.role }}">
+          <div class="chat-bubble__role">{{ message.get_role_display }}</div>
+          {{ message.content|linebreaksbr }}
+          {% if message.source_chunks %}
+            <div class="chat-citations">
+              {% for page in message.source_chunks|dictsortreversed:"page_number" %}
+                <span class="chat-citation">Page {{ page.page_number }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      {% empty %}
+        <div class="chat-blade__empty">Ask a question about this document to get started.</div>
+      {% endfor %}
+    </div>
+
+    <div class="chat-blade__footer">
+      <form method="post" class="chat-input-row">
+        {% csrf_token %}
+        <input type="text" name="question" placeholder="Ask a question..." required autofocus>
+        <button type="submit" class="button-primary">Ask</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

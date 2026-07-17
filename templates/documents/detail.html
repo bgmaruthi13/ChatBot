@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ document.title }} · PDF ChatBot{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">{{ document.title }}</h1>
+
+  <div class="surface" style="padding: 16px; max-width: 480px;">
+    <p><strong>Status:</strong> <span class="status-badge status-badge--{{ document.status }}" data-status-badge="{{ document.pk }}" data-status="{{ document.status }}">{{ document.get_status_display }}</span></p>
+    <p><strong>Pages:</strong> <span data-pages="{{ document.pk }}">{{ document.page_count|default:"—" }}</span></p>
+    <p><strong>Uploaded:</strong> {{ document.uploaded_at }}</p>
+    {% if document.error_message %}
+      <p><strong>Error:</strong> <span data-error="{{ document.pk }}">{{ document.error_message }}</span></p>
+    {% else %}
+      <p data-error-row="{{ document.pk }}" style="display: none;"><strong>Error:</strong> <span data-error="{{ document.pk }}"></span></p>
+    {% endif %}
+  </div>
+
+  <p style="margin-top: 16px;">
+    <a href="{% url 'documents:list' %}">&larr; Back to Documents</a>
+    &nbsp;|&nbsp;
+    <a href="{% url 'documents:delete' document.pk %}" style="color: var(--color-error);">Delete</a>
+  </p>
+{% endblock %}
+
+{% block extra_body %}
+  <script src="{% static 'js/status-poll.js' %}"></script>
+{% endblock %}
