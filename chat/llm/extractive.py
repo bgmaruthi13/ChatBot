@@ -12,26 +12,22 @@ MIN_SENTENCE_LENGTH = 15
 
 class ExtractiveProvider(LLMProvider):
     """Default provider - no API key, no external call, no generative
-    model. Still a real, working answer mode (not a placeholder): for
-    each retrieved chunk, it finds the best-matching sentence (by
-    semantic similarity to the question, same embedding model as
-    retrieval) and returns that sentence plus its immediate neighbors in
-    their original order - a short, coherent excerpt per source, not a
-    scattershot of disconnected sentences pulled from all over the
-    document. Limited to the strongest couple of sources so the answer
-    reads like a focused explanation rather than a wall of citations.
+    model. Still a real, working answer mode (not a placeholder): shows
+    the full text of every retrieved chunk that's actually relevant to
+    the question, each under its own page citation, in relevance order.
+    Irrelevant chunks (vector search always returns top_k results even
+    when nothing matches well) and near-duplicate chunks (from
+    chunk_text's overlapping windows) are filtered out - everything else
+    found is shown as-is, unsummarized, until a real LLM is configured
+    (Epic 9: LLM_PROVIDER=claude/openai/ollama) to condense it instead.
     """
-
-    MAX_SOURCES = 2
-    SENTENCES_BEFORE = 1
-    SENTENCES_AFTER = 1
 
     # Cosine similarity floor (all-MiniLM-L6-v2, question vs. sentence).
     # Calibrated empirically: genuinely relevant sentences score ~0.6-0.9,
     # unrelated filler scores ~0.2-0.35. Below this, a chunk is "in the
     # top-k nearest neighbors" but not actually relevant - vector search
     # always returns top_k results even when nothing matches well, so
-    # this stops those weak matches from padding out the answer.
+    # this stops those weak matches showing up as if they were useful.
     MIN_SCORE = 0.4
 
     def generate(self, question, chunks):
@@ -54,27 +50,23 @@ class ExtractiveProvider(LLMProvider):
 
         parts = [f'Based on the document, here\'s what I found about "{question}":']
         used_chunk_ids = []
-        seen_excerpts = []
-        for chunk, sentences, best_index, score in ranked:
-            if len(used_chunk_ids) >= self.MAX_SOURCES:
-                break
+        seen_texts = []
+        for chunk, _sentences, _best_index, score in ranked:
             if score < self.MIN_SCORE:
                 break  # ranked best-first, so nothing after this clears the bar either
 
-            start = max(0, best_index - self.SENTENCES_BEFORE)
-            end = min(len(sentences), best_index + self.SENTENCES_AFTER + 1)
-            excerpt = " ".join(sentences[start:end])
+            text = chunk["text"]
 
             # Overlapping chunks (chunk_text's 150-word stride overlap)
-            # can independently rank as top sources for the same
-            # question and yield near-duplicate excerpts. Skip repeats
-            # rather than showing the same content twice.
-            if self._is_duplicate(excerpt, seen_excerpts):
+            # can both be relevant to the same question and largely
+            # repeat each other. Skip repeats rather than showing the
+            # same content twice.
+            if self._is_duplicate(text, seen_texts):
                 continue
 
-            parts.append(f"\n\nFrom page {chunk['page_number']}:\n{excerpt}")
+            parts.append(f"\n\nFrom page {chunk['page_number']}:\n{text}")
             used_chunk_ids.append(chunk["chunk_id"])
-            seen_excerpts.append(excerpt)
+            seen_texts.append(text)
 
         if not used_chunk_ids:
             return (
@@ -86,9 +78,9 @@ class ExtractiveProvider(LLMProvider):
         return "".join(parts), used_chunk_ids
 
     @staticmethod
-    def _is_duplicate(excerpt, seen_excerpts, threshold=0.7):
-        words = set(excerpt.lower().split())
-        for seen in seen_excerpts:
+    def _is_duplicate(text, seen_texts, threshold=0.7):
+        words = set(text.lower().split())
+        for seen in seen_texts:
             seen_words = set(seen.lower().split())
             if not words or not seen_words:
                 continue
@@ -112,9 +104,9 @@ class ExtractiveProvider(LLMProvider):
 
     def _rank_chunks(self, question, chunk_sentences):
         """For each (chunk, sentences), find its best-matching sentence
-        and score. Returns [(chunk, sentences, best_index, score), ...]
-        sorted best-first. Embeds every candidate sentence in one batch
-        call.
+        and score, used to rank/filter chunks by relevance. Returns
+        [(chunk, sentences, best_index, score), ...] sorted best-first.
+        Embeds every candidate sentence in one batch call.
         """
         question_vector = np.array(embed(question))
         question_unit = question_vector / np.linalg.norm(question_vector)

@@ -1,5 +1,12 @@
 from abc import ABC, abstractmethod
 
+# Shared by every generative provider's system prompt (claude/openai/
+# ollama) so answers stay short regardless of which one is active.
+# Paired with a matching output-token cap in each provider - the prompt
+# instruction is the real control (a model asked for ~75 words rarely
+# needs a hard stop), the token cap is just a backstop.
+CONCISE_INSTRUCTION = "Keep your answer between 50 and 100 words."
+
 
 class LLMProvider(ABC):
     """A chat answer generator. `chunks` is the list of dicts returned by
