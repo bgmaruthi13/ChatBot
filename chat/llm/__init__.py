@@ -6,18 +6,22 @@ from .claude import ClaudeProvider
 from .extractive import ExtractiveProvider
 from .ollama import OllamaProvider
 from .openai import OpenAIProvider
+from .smollm import SmolLMProvider
 
 logger = logging.getLogger(__name__)
 
 # Providers register themselves here as they're added (9.2-9.4: claude,
-# openai, ollama). Each entry is a zero-arg factory so unavailable SDKs
-# for unused providers never get imported (the SDK import itself lives
-# inside each provider's __init__, not at module level).
+# openai, ollama; smollm added later - runs a small model in-process via
+# transformers, no separate runtime/server needed). Each entry is a
+# zero-arg factory so unavailable SDKs for unused providers never get
+# imported (the SDK import itself lives inside each provider's __init__,
+# not at module level).
 _REGISTRY = {
     "extractive": ExtractiveProvider,
     "claude": ClaudeProvider,
     "openai": OpenAIProvider,
     "ollama": OllamaProvider,
+    "smollm": SmolLMProvider,
 }
 
 # Settings a provider needs before it's safe to instantiate. Providers
